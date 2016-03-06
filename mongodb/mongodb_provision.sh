@@ -1,0 +1,1 @@
+sudo mongo < initial.js
