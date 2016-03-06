@@ -5,11 +5,9 @@
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
-ENV['VAGRANT_DETECTED_OS'] = 'cygwin'
-Vagrant.configure(VAGRANTFILE_API_VERSION) do |config| 
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     config.vm.box = "ubuntu/trusty64"
-    #config.vm.box_version = "1.0.1"
     config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"
     # VM config
     config.vm.define :mongodb do |mongodb|
@@ -28,15 +26,19 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             v.customize ['modifyvm', :id, '--nictype2', 'virtio']
         end
 
-        # Update package list
+        # Basic box provisioning
         mongodb.vm.provision "shell", path: "provision.sh"
 
-        
+        # Fixing missing tty
 		mongodb.vm.provision "fix-no-tty", type: "shell" do |s|
 				s.privileged = false
 				s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile"
 		end
+
+		# MongoDB initialization JS script
 		mongodb.vm.provision "file", source: "initial.js", destination: "initial.js"
+
+		# MongoDB provisioning
 		mongodb.vm.provision "shell", path: "mongodb_provision.sh"
     end
 end
